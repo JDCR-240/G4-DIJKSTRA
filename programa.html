@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrafoStudio - Editor & Analizador de Grafos</title>
+    
+    <!-- FontAwesome Iconos CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vis-Network JS CDN -->
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="img/iconoG4.ico">
+    <title>G4 Dijkstra</title>
+</head>
+<body>
+
+    <!-- Encabezado Superior -->
+    <header>
+        <div class="header-brand">
+            <div class="header-logo">
+                <i class="fa-solid fa-diagram-project"></i>
+            </div>
+            <div class="header-title">
+                <h1>GrafoStudio</h1>
+                <p>Editor, Dijkstra y Detección de Ciclos</p>
+            </div>
+        </div>
+
+        <div class="header-stats">
+            <div class="stat-badge">
+                <span class="dot-blue"></span>
+                <span class="stat-label">Nodos:</span>
+                <span id="cant-nodos" class="stat-value">0</span>
+            </div>
+            <div class="stat-badge">
+                <span class="dot-emerald"></span>
+                <span class="stat-label">Aristas:</span>
+                <span id="cant-aristas" class="stat-value">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="contenedor-principal">
+        <aside>
+            <div class="seccion-panel">
+                <h2 class="titulo-seccion"><i class="fa-solid fa-hand-pointer" style="color: var(--primario-claro);"></i> Modo de Trabajo</h2>
+                <div class="grid-modos">
+                    <button id="btn-mover" onclick="cambiarModo('mover')" class="btn-modo activo">
+                        <i class="fa-solid fa-arrow-pointer"></i> <span>Mover / Ver</span>
+                    </button>
+                    <button id="btn-agregar" onclick="cambiarModo('agregar')" class="btn-modo">
+                        <i class="fa-solid fa-circle-plus" style="color: var(--exito-claro);"></i> <span>+ Nodo</span>
+                    </button>
+                    <button id="btn-conectar" onclick="cambiarModo('conectar')" class="btn-modo">
+                        <i class="fa-solid fa-link" style="color: var(--advertencia-claro);"></i> <span>Relacionar</span>
+                    </button>
+                    <button id="btn-eliminar" onclick="cambiarModo('eliminar')" class="btn-modo">
+                        <i class="fa-solid fa-trash-can" style="color: var(--peligro-claro);"></i> <span>Eliminar</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="seccion-panel">
+                <h2 class="titulo-seccion"><i class="fa-solid fa-sliders" style="color: #818cf8;"></i> Nuevas Relaciones</h2>
+                <div class="campo-grupo">
+                    <label>Peso Predeterminado:</label>
+                    <input type="number" id="peso-defecto" value="1" min="1" class="input-texto">
+                </div>
+                <div class="flex-toggle">
+                    <span style="font-size: 12px; color: var(--text-input);">Relación Dirigida:</span>
+                    <label class="switch"><input type="checkbox" id="es-dirigido" checked><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <div class="seccion-panel seccion-panel-fondo">
+                <h2 class="titulo-seccion"><i class="fa-solid fa-rotate-right" style="color: var(--peligro-claro);"></i> Validación de Ciclos</h2>
+                <p class="texto-descriptivo">Comprueba si existen ciclos cerrados dentro de la red.</p>
+                <button onclick="verificarCiclos()" class="btn-accion btn-peligro">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Detectar Ciclos
+                </button>
+                <div id="resultado-ciclo" class="caja-resultado oculto">
+                    <div id="ciclo-titulo" class="res-titulo"></div>
+                    <div id="ciclo-detalle" class="res-detalle"></div>
+                </div>
+            </div>
+
+            <div class="seccion-panel seccion-panel-fondo">
+                <h2 class="titulo-seccion"><i class="fa-solid fa-route" style="color: var(--exito-claro);"></i> Ruta Más Corta (Dijkstra)</h2>
+                <div class="grid-2col">
+                    <div class="campo-grupo">
+                        <label>Origen:</label>
+                        <select id="sel-origen" class="select-estilizado"><option value="">Seleccionar...</option></select>
+                    </div>
+                    <div class="campo-grupo">
+                        <label>Destino:</label>
+                        <select id="sel-destino" class="select-estilizado"><option value="">Seleccionar...</option></select>
+                    </div>
+                </div>
+                <div class="flex-gap-2">
+                    <button onclick="ejecutarDijkstra()" class="btn-accion btn-exito" style="flex: 1;">
+                        <i class="fa-solid fa-play"></i> Calcular
+                    </button>
+                    <button onclick="restaurarColores()" class="btn-accion btn-secundario" style="width: auto;" title="Restablecer">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+                <div id="resultado-dijkstra" class="caja-resultado res-dijkstra oculto">
+                    <div class="res-titulo" style="color: var(--exito-claro); justify-content: space-between;">
+                        <span>Distancia:</span><span id="distancia-total" style="font-size: 14px;">0</span>
+                    </div>
+                    <div class="res-detalle" id="texto-camino" style="color: var(--text-secundario);">Ruta: -</div>
+                </div>
+            </div>
+
+            <div class="seccion-panel" style="margin-top: auto;">
+                <button onclick="generarGrafoEjemplo()" class="btn-accion btn-secundario" style="margin-bottom: 8px;">
+                    <i class="fa-solid fa-shuffle" style="color: var(--advertencia-claro);"></i> Grafo Aleatorio
+                </button>
+                <button onclick="limpiarLienzo()" class="btn-accion btn-vaciar">
+                    <i class="fa-solid fa-trash-arrow-up"></i> Vaciar Lienzo
+                </button>
+            </div>
+        </aside>
+
+        <main>
+            <div class="badge-modo-flotante">
+                <div id="ind-modo" class="indicador-dot"></div>
+                <div>
+                    <div id="tit-modo" class="tit-modo">Modo: Mover / Navegar</div>
+                    <div id="desc-modo" class="desc-modo">Arrastra nodos para moverlos o doble click para editarlos.</div>
+                </div>
+            </div>
+            <div id="lienzo-grafo"></div>
+            <div id="toast"><i id="toast-icono" class="fa-solid fa-circle-info"></i><span id="toast-msg">Notificación</span></div>
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <div id="modal-arista" class="modal-overlay">
+        <div class="modal-caja">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primario-claro);"></i> Editar Conexión</h3>
+                <button onclick="ocultarModal('modal-arista')" class="btn-cerrar-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="edit-arista-id">
+            <div class="campo-grupo">
+                <label>Peso de la arista:</label>
+                <input type="number" id="edit-arista-peso" min="1" class="input-texto">
+            </div>
+            <div class="flex-toggle">
+                <span style="font-size: 12px; color: var(--text-input);">Conexión Dirigida:</span>
+                <label class="switch"><input type="checkbox" id="edit-arista-dirigida"><span class="slider"></span></label>
+            </div>
+            <div class="modal-footer">
+                <button onclick="ocultarModal('modal-arista')" class="btn-accion btn-secundario" style="width: auto;">Cancelar</button>
+                <button onclick="guardarArista()" class="btn-accion btn-exito" style="width: auto; background-color: var(--primario);">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-nodo" class="modal-overlay">
+        <div class="modal-caja">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-dot" style="color: var(--exito-claro);"></i> Editar Nodo</h3>
+                <button onclick="ocultarModal('modal-nodo')" class="btn-cerrar-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="edit-nodo-id">
+            <div class="campo-grupo">
+                <label>Nombre del Nodo:</label>
+                <input type="text" id="edit-nodo-nombre" class="input-texto">
+            </div>
+            <div class="modal-footer">
+                <button onclick="ocultarModal('modal-nodo')" class="btn-accion btn-secundario" style="width: auto;">Cancelar</button>
+                <button onclick="guardarNodo()" class="btn-accion btn-exito" style="width: auto;">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
