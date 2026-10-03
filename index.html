@@ -229,6 +229,8 @@
                 <input type="number" id="nodeCount" min="7" max="16" value="7">
             </div>
             <div class="input-hint">Número de Nodos (7 - 16)</div>
+           
+            <div id="error-msg" style="color: #c13; font-size: 12px; margin-top: 6px; font-weight: 500; display: none;"></div>
         </div>
 
         <div class="button-group">
@@ -350,10 +352,21 @@
                 particles[i].draw();
             }
         }
-        function irAlPrograma(modo) {
-            // Obtenemos el número que el usuario puso en el input
-            const cantidadNodos = document.getElementById('nodeCount').value;
-            // Redirigimos a programa.html enviando el modo y la cantidad por la URL
+       function irAlPrograma(modo) {
+            const inputVal = document.getElementById('nodeCount').value;
+            const cantidadNodos = parseInt(inputVal, 10);
+            const errorDiv = document.getElementById('error-msg');
+
+            // Validar si está fuera del rango (7 a 16)
+            if (isNaN(cantidadNodos) || cantidadNodos < 7 || cantidadNodos > 16) {
+                // Muestra el mensaje con letras negras/oscuras en el bloque de abajo
+                errorDiv.innerText = "El número de nodos debe estar entre 7 y 16.";
+                errorDiv.style.display = "block";
+                return; // Detiene la navegación
+            }
+
+            // Si pasa la validación, oculta el mensaje (por si acaso) y redirige
+            errorDiv.style.display = "none";
             window.location.href = `programa.html?modo=${modo}&nodos=${cantidadNodos}`;
         }
         // Iniciar al cargar
